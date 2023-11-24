@@ -1,0 +1,20 @@
+#eukaryotes, full loop: 
+#break fasta into array by ">", ignoring newline chars
+#per fasta entry, split into accession and seq
+#create blast outfile csv name and temp file (do > for tmp file to overwrite file instead of append by >>)
+#blast, saving csv with format query accession | subject accession | eval | percent id | tax id(s)
+#delete temp file
+
+array=(${(ps:>:)"$(< mito_seqs.fasta)"});
+for ENTRY in ${array};
+do;
+echo $ENTRY"\n";
+IFS='\n' read -r -A entry_arr <<< "$ENTRY";
+OUTFILE_NAME=${entry_arr[1]}
+echo ">"$ENTRY > "temp_"$OUTFILE_NAME".fasta"
+
+/Users/acohen/miniconda3/pkgs/blast-2.14.1-pl5321h91c44f7_0/bin/blastn -task megablast -query "temp_"$OUTFILE_NAME".fasta" -db nr -out $OUTFILE_NAME".csv" -outfmt "10 qacc sacc evalue pident staxids" -entrez_query "Eukaryota [Organism]" -perc_identity 90 -remote;
+
+rm -f "temp_"$OUTFILE_NAME".fasta";
+
+done
